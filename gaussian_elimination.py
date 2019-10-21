@@ -99,7 +99,8 @@ def gaussian_elim(A: np.ndarray, b: np.ndarray, pivoting_method="partial") -> np
         if pivoting_method != "default":
             m, _, col_perm = do_matrix_pivoting(m, j, pivoting_method)
             if col_perm is not None:
-                col_permutation = col_permutation @ col_perm
+                # col_permutation = col_permutation @ col_perm
+                col_permutation = col_perm.transpose() @ col_permutation
 
         for i in range(j + 1, size):
             if m[j, j] == 0.0:
@@ -113,8 +114,8 @@ def gaussian_elim(A: np.ndarray, b: np.ndarray, pivoting_method="partial") -> np
     A = m[:size, :size]
     b = m[:, -1]
     x = backward_substitution(A, b)
-    # x = col_permutation @ x
-    x = x @ col_permutation.transpose()
+    x = x @ col_permutation
+    # x = x @ col_permutation.transpose()
     print("Output Augmented Matrix:")
     print(m)
     print("Solution:")
@@ -137,15 +138,15 @@ if "__main__" == __name__:
     # b = np.array([4, 5])
     # matrix = np.array([[1.,-1.,1.,-1.],[1.,0.,0.,0.],[1.,1.,1.,1.],[1.,2.,4.,8.]])
     # b =  np.array([14., 4. , 2. , 2.])
-    # matrix = np.array(
-    #     [
-    #         [1.00, 0.00, 0.00, 0.00, 0.00, 0.00],
-    #         [1.00, 0.63, 0.39, 0.25, 0.16, 0.10],
-    #         [1.00, 1.26, 1.58, 1.98, 2.49, 3.13],
-    #         [1.00, 1.88, 3.55, 6.70, 12.62, 23.80],
-    #         [1.00, 2.51, 6.32, 15.88, 39.90, 100.28],
-    #         [1.00, 3.14, 9.87, 31.01, 97.41, 306.02],
-    #     ]
-    # )
-    # b = np.array([-0.01, 0.61, 0.91, 0.99, 0.60, 0.02])
+    matrix = np.array(
+        [
+            [1.00, 0.00, 0.00, 0.00, 0.00, 0.00],
+            [1.00, 0.63, 0.39, 0.25, 0.16, 0.10],
+            [1.00, 1.26, 1.58, 1.98, 2.49, 3.13],
+            [1.00, 1.88, 3.55, 6.70, 12.62, 23.80],
+            [1.00, 2.51, 6.32, 15.88, 39.90, 100.28],
+            [1.00, 3.14, 9.87, 31.01, 97.41, 306.02],
+        ]
+    )
+    b = np.array([-0.01, 0.61, 0.91, 0.99, 0.60, 0.02])
     x = gaussian_elim(matrix, b, pivoting_method=pivoting_method)

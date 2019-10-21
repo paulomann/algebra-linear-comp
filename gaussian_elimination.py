@@ -1,5 +1,7 @@
 import numpy as np
 from typing import Tuple
+import sys
+
 np.set_printoptions(precision=2)
 
 
@@ -12,6 +14,21 @@ def backward_substitution(A: np.ndarray, b: np.ndarray) -> np.ndarray:
         x[i] = (b[i] - sum(A[i, (i + 1) :] * x[i + 1 :])) / A[i, i]
 
     return x
+
+
+def scaled_pivoting(A: np.ndarray, col: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    assert A.shape[0] == A.shape[1], "Matrix is not squared."
+    size = len(A)
+    s = np.abs(A[col:, :]).max(axis=1)
+    if 0 in s:
+        raise ValueError("Scaled factor contains 0 values. Cannot proceed.")
+    ratios = A[col:, col] / s
+    row_idx = np.argmax(ratios) + col
+    perm = np.eye(size)
+    perm[col], perm[col, row_idx] = 0.0, 1.0
+    perm[row_idx], perm[row_idx, col] = 0.0, 1.0
+    return (perm @ A, perm, None)
+
 
 def partial_pivoting(
     A: np.ndarray, col: int
@@ -47,7 +64,7 @@ def complete_pivoting(
     if col_idx != col:
         perm_col[:, col], perm_col[col_idx, col] = 0.0, 1.0
         perm_col[:, col_idx], perm_col[col, col_idx] = 0.0, 1.0
-    
+
     return (perm_row @ A @ perm_col, perm_row, perm_col)
 
 
@@ -65,7 +82,7 @@ def do_matrix_pivoting(
     return (
         np.concatenate([permuted_A, np.expand_dims(b, axis=1)], axis=1),
         row_perm,
-        col_perm
+        col_perm,
     )
 
 
@@ -80,10 +97,9 @@ def gaussian_elim(A: np.ndarray, b: np.ndarray, pivoting_method="partial") -> np
     for j in range(size):
 
         if pivoting_method != "default":
-            # print(m)
             m, _, col_perm = do_matrix_pivoting(m, j, pivoting_method)
-            # print(m)
-            if col_perm is not None: col_permutation = col_permutation @ col_perm
+            if col_perm is not None:
+                col_permutation = col_permutation @ col_perm
 
         for i in range(j + 1, size):
             if m[j, j] == 0.0:
@@ -96,16 +112,29 @@ def gaussian_elim(A: np.ndarray, b: np.ndarray, pivoting_method="partial") -> np
 
     A = m[:size, :size]
     b = m[:, -1]
-    x = backward_substitution(A, b) @ col_permutation
+    x = backward_substitution(A, b)
+    # x = col_permutation @ x
+    x = x @ col_permutation.transpose()
     print("Output Augmented Matrix:")
     print(m)
     print("Solution:")
     print(x)
     return x
 
+
 if "__main__" == __name__:
+    # Use "default" for no pivoting method
+    pivoting_method = sys.argv[1]
+    # pivoting_method = "complete"
+    print("=" * 40)
+    print(f"Executing with pivoting method: {pivoting_method}.")
+    print("=" * 40)
     # matrix = np.array([[4.0, 5.0, 9.0], [1.0, 3.0, 2.0], [9.0, 2.0, 3.0]])
     # b = np.array([1, 2, 3])
     matrix = np.array([[4, 6, 9, 12], [0, 0, 50, 13], [5, 32, 4, 31], [13, 0, 14, 5]])
     b = np.array([40, 20, 10, 5])
-    x = gaussian_elim(matrix, b, pivoting_method="complete")
+    # matrix = np.array([[4.0, 5.0], [1.0, 3.0]])
+    # b = np.array([4, 5])
+    # matrix = np.array([[1.,-1.,1.,-1.],[1.,0.,0.,0.],[1.,1.,1.,1.],[1.,2.,4.,8.]])
+    # b =  np.array([14., 4. , 2. , 2.])
+    x = gaussian_elim(matrix, b, pivoting_method=pivoting_method)

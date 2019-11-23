@@ -151,4 +151,8 @@ if "__main__" == __name__:
     # b = np.array([-0.01, 0.61, 0.91, 0.99, 0.60, 0.02])
     # matrix = np.array([[2.0,1.0],[5.0,7.0]])
     # b = np.array([11.0,13.0])
+    matrix = np.array([[1.,-1.,0.],\
+            [-1.,2.,1.],\
+            [0.,1.,5.]])
+    b = np.array([3.,-3.,4.])
     x = gaussian_elim(matrix, b, pivoting_method=pivoting_method)
